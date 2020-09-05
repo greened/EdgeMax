@@ -12,6 +12,36 @@ import re
 import subprocess as sp
 import sys
 
+int_net = '10.0.10'
+iot_net = '10.0.20'
+dmz_net = '10.0.30'
+
+ext_iface = 'eth0'
+int_iface = 'eth3'
+iot_iface = 'eth3'
+adm_iface = 'eth3'
+gst_iface = 'eth3'
+dmz_iface = 'eth3'
+
+int_vlan_port = '1'
+iot_vlan_port = '2'
+adm_vlan_port = '3'
+gst_vlan_port = '4'
+dmz_vlan_port = '5'
+
+victor_addr = int_net + '.24'
+david_mac_addr = int_net + '.50'
+emily_mac_addr = int_net + '.51'
+wap1_addr = int_net + '.3'
+wap2_addr = int_net + '.4'
+tv_addr = int_net + '.5'
+avr_addr = int_net + '.6'
+
+ps5_addr = iot_net + '.7'
+
+web_addr = dmz_net + '.23'
+mail_addr = dmz_net + '.23'
+
 # Define zones and which interfaces reside in each. The 'int' and
 # 'ext' zones are required
 #
@@ -19,36 +49,31 @@ import sys
 zones = {
     'adm': {
         'description': 'Admin Zone',
-        'interfaces': ('eth0',)
-    },
-    'dmz': {
-        'description': 'DMZ Zone',
-        'interfaces': (
-                        'eth0.2',
-                        'eth0.3',
-                        'eth0.4',
-                        'eth2',)
+        'interfaces': (adm_iface + '.' + adm_vlan_port,)
     },
     'ext': {'description':  'External Zone',
-        'interfaces' :  ('eth1',)
+        'interfaces' :  (ext_iface,)
     },
     'gst': {
         'description':      'Guest Zone',
         'interfaces': (
-                        'eth0.6',
-                        'eth0.7',)
+                        gst_iface + '.' + gst_vlan_port,)
     },
     'int': {
         'description':      'Internal Zone',
         'interfaces' :      (
-                        'eth0.5',
-                        'peth0',)
+                        int_iface + '.' + int_vlan_port,)
     },
-    'mdx': {
-        'description':      'Media Zone',
+     'iot': {
+        'description':      'IOT Zone',
         'interfaces' :      (
-                        'eth0.555',)
-    }
+                        iot_iface + '.' + iot_vlan_port,)
+    },
+     'dmz': {
+        'description':      'DMZ Zone',
+        'interfaces' :      (
+                        dmz_iface + '.' + dmz_vlan_port,)
+    },
 }  # yapf: disable
 
 # Define Groups which can be used in rules
@@ -125,15 +150,10 @@ fw_groups = {
         }
     },
     'address_group': {
-        'media': {
-            'description': 'Media Address Group',
+        'iot': {
+            'description': 'IOT Address Group',
             'addresses': (
-                        '192.168.50.30-192.168.50.60',
-                        '192.168.4.255',
-                        '192.168.10.30',
-                        '192.168.10.35',
-                        '224.0.0.251',
-                        '239.255.255.250',
+                        ps5_addr,
                         '255.255.255.255',)
         }
     },
@@ -228,49 +248,49 @@ rules = (
     # RULE 1 *****************************************************************
     # Allow connections
     (('adm', 'loc'), all_zones, ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('int', 'mdx'), ('int', 'mdx'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('dmz', 'gst', 'int', 'mdx'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('dmz', 'gst', 'int', 'ext', 'mdx'), ('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
+    (('int'), ('int'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
+    (('dmz', 'gst', 'int', 'iot'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
+    (('dmz', 'gst', 'int', 'ext', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
     # RULE 2 ***********************************************************************
     # Drop invalid packets
     (all_zones, all_zones, ('description "Drop invalid packets"', 'action drop', 'state invalid enable'), [4, 6]),
     # RULE 3 ***********************************************************************
     # Drop invalid WAN source IPs
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('description "Drop IPv4 bogons"', 'action drop', 'source group network-group ipv4Bogons'), [4]),
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('description "Drop IPv6 bogons"', 'action drop', 'source group ipv6-network-group ipv6Bogons'), [6]),
+    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv4 bogons"', 'action drop', 'source group network-group ipv4Bogons'), [4]),
+    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv6 bogons"', 'action drop', 'source group ipv6-network-group ipv6Bogons'), [6]),
     # RULE 300 *********************************************************************
     # Access 1 pixel HTTP server
-    (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Permit access to pixel server"', 'action accept', 'protocol tcp', 'destination address 192.168.168.1'), [4], 300),
+    # (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Permit access to pixel server"', 'action accept', 'protocol tcp', 'destination address 192.168.168.1'), [4], 300),
     # RULE 400 *********************************************************************
     # Allow media address group access
 #     (('dmz', 'gst'), ('int', 'mdx'), ('description "Allow media address group access"', 'action accept', 'destination group address-group media'), [4], 400),
-    (('int', 'mdx'), ('adm', 'dmz', 'gst', 'loc'), ('description "Allow mdx to offer access to media address group"', 'action accept', 'source group address-group media'), [4], 400),
+#    (('int', 'mdx'), ('adm', 'dmz', 'gst', 'loc'), ('description "Allow mdx to offer access to media address group"', 'action accept', 'source group address-group media'), [4], 400),
     # RULE 500 *********************************************************************
     # Allow ICMP/IPV6-ICMP
     ('ext', 'loc', ('description "Block ICMP ping from the Internet"', 'action drop', 'icmp type-name ping', 'protocol icmp'), [4], 500),
     ('ext', 'loc', ('description "Block IPv6-ICMP ping from the Internet"', 'action drop', 'icmpv6 type ping', 'protocol icmpv6'), [6], 500),
     ('ext', 'loc', ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
     ('ext', 'loc', ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('adm', 'dmz', 'ext', 'gst', 'int', 'loc', 'mdx'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('adm', 'dmz', 'ext', 'gst', 'int', 'loc', 'mdx'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
+    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'dmz', 'ext', 'gst', 'int', 'iot', 'mdx'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
+    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
     # RULE 1000 ********************************************************************
     # Permit access to DNS
-    (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
+    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
     # RULE 1500 ********************************************************************
     # Block MDNS and SSDP access to Internet
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
+    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
     # RULE 2000-2100 **************************************************************
     # Permit access to SSDP
-    (('dmz', 'gst'), ('int', 'mdx'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp', 'destination group port-group ssdp'), [4, 6], 2000),
-    (('dmz', 'gst'), ('int', 'mdx'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp','destination group address-group media'), [4], 2000),
+    (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp', 'destination group port-group ssdp'), [4, 6], 2000),
+    (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2000),
     # Permit access to Print
     (('dmz', 'gst'), 'int', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp', 'destination group port-group print'), [4, 6], 2100),
-    (('dmz', 'gst'), 'int', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group media'), [4], 2100),
+    (('dmz', 'gst'), 'int', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
     # RULES 3000-3100 **************************************************************
     # Drop brute force SSH from Internet
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
+    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
     # Allow SSH
-    (('adm', 'int', 'loc', 'mdx'), ('adm', 'dmz', 'gst', 'int', 'loc', 'mdx'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+    (('adm', 'int', 'loc', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     # RULES 5000-5600 **************************************************************
     # Allow vpn traffic ext/int
@@ -279,16 +299,24 @@ rules = (
     (('ext', 'int'), ('loc', 'dmz'), ('description "Allow vpn ESP"', 'action accept', 'protocol esp'), [4], 5600),
     # RULE 6000 ********************************************************************
     # Allow ADT Camera streams
-    ('int', 'dmz', ('description "Allow ADT Camera streams"', 'action accept', 'protocol tcp_udp', 'destination port 4301-4325', 'log enable'), [4], 6000),
+    # ('int', 'dmz', ('description "Allow ADT Camera streams"', 'action accept', 'protocol tcp_udp', 'destination port 4301-4325', 'log enable'), [4], 6000),
     # RULE 7000 ********************************************************************
     # Allow DHCP/DHCPV6 responses from ISP
     ('ext', 'loc', ('description "Allow DHCPV4 responses from ISP"', 'action accept', 'protocol udp', 'source port bootps', 'destination port bootpc'), [4], 7000),
     ('ext', 'loc', ('description "Allow DHCPV6 responses from ISP"', 'action accept', 'protocol udp', 'source address fe80::/64', 'source port dhcpv6-server', 'destination port dhcpv6-client'), [6], 7000),
-    # Allow DHCP/DHCPV6 responses from DMZ, int, mdx and gst to local
-    (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
-    (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
+    # Allow DHCP/DHCPV6 responses from DMZ, int, iot and gst to local
+    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
+    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
     )
 # yapf: enable
+
+# Port forwarding
+port_fwds = (
+    ('https', 443, 'tcp', web_addr),
+    ('imaps', 993, 'tcp', mail_addr),
+    ('smtps', 587, 'tcp', mail_addr)
+)
+
 
 class switch(object):
 
@@ -549,6 +577,24 @@ if __name__ == '__main__':
                     "set zone-policy zone %s from %s firewall %sname %s%s-%s" %
                     (zone, srczone, prefix, prefix, srczone, zone))
 
+    # Add port forwards
+    commands.append("set port-forward auto-firewall enable");
+    commands.append("set port-forward hairpin-nat enable");
+    commands.append("set port-forward wan-interface %s" % ext_iface);
+    commands.append("set port-forward lan-interface %s" % dmz_iface + '.'+ dmz_vlan_port);
+
+    for id, port_fwd in enumerate(port_fwds, 1):
+        name = port_fwd[0]
+        port = port_fwd[1]
+        protocol = port_fwd[2]
+        dest = port_fwd[3]
+
+        commands.append("set port-forward rule {} description {}".format(id, name));
+        commands.append("set port-forward rule {} forward-to address {}".format(id, dest));
+        commands.append("set port-forward rule {} forward-to port {}".format(id, port));
+        commands.append("set port-forward rule {} original-port {}".format(id, port));
+        commands.append("set port-forward rule {} protocol {}".format(id, protocol));
+
     # Remove duplicates
     seen = set()
     result = []
@@ -595,5 +641,5 @@ if __name__ == '__main__':
 
     else:
         for cmd in commands:
-            print "echo %s" % cmd
+            #print "echo %s" % cmd
             print cmd
