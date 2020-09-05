@@ -15,6 +15,8 @@ import sys
 int_net = '10.0.10'
 iot_net = '10.0.20'
 dmz_net = '10.0.30'
+gst_net = '10.0.40'
+adm_net = '10.0.90'
 
 ext_iface = 'eth0'
 int_iface = 'eth3'
@@ -38,9 +40,24 @@ tv_addr = int_net + '.5'
 avr_addr = int_net + '.6'
 
 ps5_addr = iot_net + '.7'
+printer_addr = iot_net + '.8'
 
 web_addr = dmz_net + '.23'
 mail_addr = dmz_net + '.23'
+
+router_dot = '.1'
+router_int_addr = int_net + router_dot
+router_iot_addr = iot_net + router_dot
+router_gst_addr = gst_net + router_dot
+router_dmz_addr = dmz_net + router_dot
+router_adm_addr = adm_net + router_dot
+
+switch_dot = '.2'
+switch_int_addr = int_net + switch_dot
+switch_adm_addr = adm_net + switch_dot
+switch_gst_addr = gst_net + switch_dot
+switch_dmz_addr = dmz_net + switch_dot
+switch_adm_addr = adm_net + switch_dot
 
 # Define zones and which interfaces reside in each. The 'int' and
 # 'ext' zones are required
@@ -278,14 +295,15 @@ rules = (
     (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
     # RULE 1500 ********************************************************************
     # Block MDNS and SSDP access to Internet
+    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port ssdp'), [4, 6], 1500),
     (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
     # RULE 2000-2100 **************************************************************
     # Permit access to SSDP
     (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp', 'destination group port-group ssdp'), [4, 6], 2000),
     (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2000),
     # Permit access to Print
-    (('dmz', 'gst'), 'int', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp', 'destination group port-group print'), [4, 6], 2100),
-    (('dmz', 'gst'), 'int', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
+    (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp', 'destination group port-group print'), [4, 6], 2100),
+    (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
     # RULES 3000-3100 **************************************************************
     # Drop brute force SSH from Internet
     ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
@@ -304,9 +322,9 @@ rules = (
     # Allow DHCP/DHCPV6 responses from ISP
     ('ext', 'loc', ('description "Allow DHCPV4 responses from ISP"', 'action accept', 'protocol udp', 'source port bootps', 'destination port bootpc'), [4], 7000),
     ('ext', 'loc', ('description "Allow DHCPV6 responses from ISP"', 'action accept', 'protocol udp', 'source address fe80::/64', 'source port dhcpv6-server', 'destination port dhcpv6-client'), [6], 7000),
-    # Allow DHCP/DHCPV6 responses from DMZ, int, iot and gst to local
-    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
-    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
+    # Allow DHCP/DHCPV6 responses from DMZ, int, iot, adm and gst to local
+    (('adm', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
+    (('adm', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
     )
 # yapf: enable
 
