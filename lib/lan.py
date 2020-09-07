@@ -20,6 +20,7 @@ isp = {
 # Interfaces: map name to interace, subnet and VLAN port.  -1 for no VLAN.
 networks = {
     'ext': { 'iface': 'eth0', 'subnet': '', 'vlan': '201', 'desc': 'External' },
+    'con': { 'iface': 'eth1', 'subnet': '10.0.10', 'vlan': '', 'desc': 'Console' },
     'int': { 'iface': 'eth3', 'subnet': '10.0.20', 'vlan': '2', 'desc': 'Internal' },
     'iot': { 'iface': 'eth3', 'subnet': '10.0.30', 'vlan': '3', 'desc': 'IOT' },
     'dmz': { 'iface': 'eth3', 'subnet': '10.0.40', 'vlan': '4', 'desc': 'DMZ' },
@@ -30,6 +31,8 @@ networks = {
 machines = {
     'router': { 'net': ['int', 'iot', 'gst', 'dmz', 'adm'], 'mac': '', 'addr': router_dot, 'port': '25' },
     'switch': { 'net': ['int', 'iot', 'gst', 'dmz', 'adm'], 'mac': 'f0:9f:c2:3f:f9:a2', 'addr': switch_dot, 'port': '' },
+    'switch-cons-adm': { 'net': ['adm'], 'mac': '00:e0:4c:68:37:bb', 'addr': '.101', 'port': '1' },
+    'switch-cons-int': { 'net': ['int'], 'mac': '00:e0:4c:68:37:bb', 'addr': '.102', 'port': '2' },
     'wap1': { 'net': ['int', 'gst'], 'mac': '98:da:c4:65:2e:96', 'addr': '.3', 'port': '3' },
     'wap2': { 'net': ['int', 'gst'], 'mac': '98:da:c4:65:32:24', 'addr': '.4', 'port': '4' },
     'tv': { 'net': ['int'], 'mac': '', 'addr': '.5', 'port': '5' },
