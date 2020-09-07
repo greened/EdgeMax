@@ -12,86 +12,24 @@ import re
 import subprocess as sp
 import sys
 
-int_net = '10.0.10'
-iot_net = '10.0.20'
-dmz_net = '10.0.30'
-gst_net = '10.0.40'
-adm_net = '10.0.90'
+sys.path.append('../lib')
 
-ext_iface = 'eth0'
-int_iface = 'eth3'
-iot_iface = 'eth3'
-adm_iface = 'eth3'
-gst_iface = 'eth3'
-dmz_iface = 'eth3'
-
-int_vlan_port = '1'
-iot_vlan_port = '2'
-adm_vlan_port = '3'
-gst_vlan_port = '4'
-dmz_vlan_port = '5'
-
-victor_addr = int_net + '.24'
-david_mac_addr = int_net + '.50'
-emily_mac_addr = int_net + '.51'
-wap1_addr = int_net + '.3'
-wap2_addr = int_net + '.4'
-tv_addr = int_net + '.5'
-avr_addr = int_net + '.6'
-
-ps5_addr = iot_net + '.7'
-printer_addr = iot_net + '.8'
-
-web_addr = dmz_net + '.23'
-mail_addr = dmz_net + '.23'
-
-router_dot = '.1'
-router_int_addr = int_net + router_dot
-router_iot_addr = iot_net + router_dot
-router_gst_addr = gst_net + router_dot
-router_dmz_addr = dmz_net + router_dot
-router_adm_addr = adm_net + router_dot
-
-switch_dot = '.2'
-switch_int_addr = int_net + switch_dot
-switch_adm_addr = adm_net + switch_dot
-switch_gst_addr = gst_net + switch_dot
-switch_dmz_addr = dmz_net + switch_dot
-switch_adm_addr = adm_net + switch_dot
+from lan import domain, networks, machines, router_dot, isp
 
 # Define zones and which interfaces reside in each. The 'int' and
 # 'ext' zones are required
 #
 # yapf: disable
-zones = {
-    'adm': {
-        'description': 'Admin Zone',
-        'interfaces': (adm_iface + '.' + adm_vlan_port,)
-    },
-    'ext': {'description':  'External Zone',
-        'interfaces' :  (ext_iface,)
-    },
-    'gst': {
-        'description':      'Guest Zone',
-        'interfaces': (
-                        gst_iface + '.' + gst_vlan_port,)
-    },
-    'int': {
-        'description':      'Internal Zone',
-        'interfaces' :      (
-                        int_iface + '.' + int_vlan_port,)
-    },
-     'iot': {
-        'description':      'IOT Zone',
-        'interfaces' :      (
-                        iot_iface + '.' + iot_vlan_port,)
-    },
-     'dmz': {
-        'description':      'DMZ Zone',
-        'interfaces' :      (
-                        dmz_iface + '.' + dmz_vlan_port,)
-    },
-}  # yapf: disable
+zones = {}
+
+for net, info in networks.items():
+    desc = info['desc'] + ' Zone'
+    iface = info['iface']
+    vlan = info['vlan']
+
+    zones[net] = {}
+    zones[net]['description'] = desc
+    zones[net]['interfaces'] = (iface + '.' + vlan)
 
 # Define Groups which can be used in rules
 # Note that Comcast distributes ipv6 from 'fe80::/10' - so do not add this to the bogon list
@@ -170,7 +108,7 @@ fw_groups = {
         'iot': {
             'description': 'IOT Address Group',
             'addresses': (
-                        ps5_addr,
+                        machines['ps5']['addr'],
                         '255.255.255.255',)
         }
     },
@@ -330,9 +268,9 @@ rules = (
 
 # Port forwarding
 port_fwds = (
-    ('https', 443, 'tcp', web_addr),
-    ('imaps', 993, 'tcp', mail_addr),
-    ('smtps', 587, 'tcp', mail_addr)
+    ('https', 443, 'tcp', machines['bluebird']['addr']),
+    ('imaps', 993, 'tcp', machines['victor']['addr']),
+    ('smtps', 587, 'tcp', machines['victor']['addr'])
 )
 
 
@@ -598,8 +536,8 @@ if __name__ == '__main__':
     # Add port forwards
     commands.append("set port-forward auto-firewall enable");
     commands.append("set port-forward hairpin-nat enable");
-    commands.append("set port-forward wan-interface %s" % ext_iface);
-    commands.append("set port-forward lan-interface %s" % dmz_iface + '.'+ dmz_vlan_port);
+    commands.append("set port-forward wan-interface %s" % networks['ext']['iface']);
+    commands.append("set port-forward lan-interface %s" % networks['dmz']['iface'] + '.'+ networks['dmz']['vlan']);
 
     for id, port_fwd in enumerate(port_fwds, 1):
         name = port_fwd[0]
