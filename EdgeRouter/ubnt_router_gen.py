@@ -19,6 +19,8 @@ from lan import networks, router_dot, user, router_password, isp
 
 global commands
 commands         = []
+vyatta_cmd       = "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper"
+# vyatta_cmd                                                = "echo" # Debug
 
 edge_os = {
     'wheezy': { 'url': 'http://archive.debian.org/debian' },

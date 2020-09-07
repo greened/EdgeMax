@@ -18,6 +18,8 @@ from lan import networks, machines, router_dot, user, switch_password
 
 global commands
 commands         = []
+vyatta_cmd       = "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper"
+# vyatta_cmd                                                = "echo" # Debug
 
 def get_args():
     # Enable default logging (rule 10000)
