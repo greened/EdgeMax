@@ -11,6 +11,7 @@ import itertools
 import re
 import subprocess as sp
 import sys
+import os
 
 sys.path.append('../lib')
 
@@ -18,6 +19,11 @@ from lan import networks, router_dot, user, router_password, isp
 
 global commands
 commands         = []
+
+edge_os = {
+    'wheezy': { 'url': 'http://archive.debian.org/debian' },
+    'stretch': { 'url': 'http://http.us.debian.org/debian' }
+}
 
 def get_args():
     # Enable default logging (rule 10000)
@@ -108,6 +114,17 @@ if __name__ == '__main__':
     commands.append("set system login user {} authentication plaintext-password {}".format(user, router_password))
     commands.append("set system login user {} level admin".format(user))
     commands.append("delete system login user ubnt")
+
+    if os.path.exists('/etc/os-release'):
+        with open('/etc/os-release', 'r') as fd:
+            for line in fd:
+                match = re.search('VERSION="[0-9]+ \(([^)]+)\)"', line)
+                if match:
+                    release = match.group(1)
+                    url = edge_os[release]['url']
+                    commands.append("set system package repository {} components 'main contrib non-free'".format(release))
+                    commands.append("set system package repository {} distribution {}".format(release, release))
+                    commands.append("set system package repository {} url {}".format(release, url))
 
     commands.append("set system offload ipv4 forwarding enable")
     commands.append("set system offload ipv4 gre enable")
