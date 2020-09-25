@@ -64,7 +64,6 @@ def get_args():
 if __name__ == '__main__':
     get_args()
 
-    commands.append("begin")
     commands.append("set system login user {} authentication plaintext-password '{}'".format(user, router_password))
     commands.append("set system login user {} level admin".format(user))
 #    commands.append("delete system login user ubnt")
@@ -148,7 +147,5 @@ if __name__ == '__main__':
         commands.append("save")
     else:
         raise Exception("Unknown isp type {}".format(isp['type']))
-
-    commands.append("end")
 
     update_router(commands, do_update=user_opts.update_config_boot)

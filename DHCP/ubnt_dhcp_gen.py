@@ -57,8 +57,6 @@ def get_args():
 if __name__ == '__main__':
     get_args()
 
-    commands.append("begin")
-
     # Configure DHCP.
     commands.append("set service dhcp-server disabled false")
     commands.append("set service dhcp-server use-dnsmasq disable")
@@ -119,7 +117,5 @@ if __name__ == '__main__':
 #                commands.append("set service dns forwarding options dhcp-host={},{}".format(mac, addr))
                 commands.append("commit")
                 commands.append("save")
-
-    commands.append("end")
 
     update_router(commands, do_update=user_opts.update_config_boot)

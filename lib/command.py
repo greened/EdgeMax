@@ -7,8 +7,11 @@ def close_shell(vyatta_shell):
 
     cfg_error = False
 
+    print 'out: {}'.format(out)
+    print 'err: {}'.format(out)
+
     if out:
-        if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning)', out) :
+        if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning|[Ff]ailed|without config session)', out) :
             cfg_error = True
             print "configure message:"
             print out
@@ -91,10 +94,12 @@ def update_router(commands, do_update=False):
                     stdout=sp.PIPE,
                     stderr = sp.PIPE)
                 new_shell = False
+                vyatta_shell.stdin.write('{} begin;\n'.format(vyatta_cmd))
 
             vyatta_shell.stdin.write('{} {};\n'.format(vyatta_cmd, cmd))
 
-            if cmd == 'save' or cmd == 'end':
+            if cmd == 'save':
+                vyatta_shell.stdin.write('{} end;\n'.format(vyatta_cmd))
                 new_shell = True
                 if not close_shell(vyatta_shell):
                     raise Exception('Configuration error')

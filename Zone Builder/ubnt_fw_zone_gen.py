@@ -401,8 +401,6 @@ def build_rule(source_zones, dest_zones, params, ipversions = [4, 6], rulenum=No
 if __name__ == '__main__':
     get_args()
 
-    commands.append("begin")
-
     commands.append("delete firewall group")
     commands.append("delete firewall name")
     commands.append("delete firewall ipv6-name")
@@ -546,7 +544,5 @@ if __name__ == '__main__':
 
         commands.append("commit")
         commands.append("save")
-
-    commands.append("end")
 
     update_router(commands, do_update=user_opts.update_config_boot)
