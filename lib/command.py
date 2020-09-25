@@ -7,9 +7,6 @@ def close_shell(vyatta_shell):
 
     cfg_error = False
 
-    print 'out: {}'.format(out)
-    print 'err: {}'.format(out)
-
     if out:
         if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning|[Ff]ailed|without config session|[(]?the specified node does not exist[)](?<!Nothing to delete ))', out) :
             cfg_error = True
