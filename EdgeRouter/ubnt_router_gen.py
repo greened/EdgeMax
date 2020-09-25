@@ -149,4 +149,6 @@ if __name__ == '__main__':
     else:
         raise Exception("Unknown isp type {}".format(isp['type']))
 
+    commands.append("end")
+
     update_router(commands, do_update=user_opts.update_config_boot)

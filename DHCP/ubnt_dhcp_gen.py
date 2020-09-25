@@ -17,9 +17,6 @@ sys.path.append('../lib')
 from lan import domain, networks, machines, router_dot, isp
 
 global commands
-commands         = []
-vyatta_cmd       = "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper"
-# vyatta_cmd                                                = "echo" # Debug
 
 def get_args():
     # Enable default logging (rule 10000)
@@ -56,53 +53,6 @@ def get_args():
 
     user_opts        = parser.parse_args()
 
-
-def yesno(*args):
-
-    if len(args) > 1:
-        default                                             = args[0].strip().lower()
-        question                                            = args[1].strip()
-    elif len(args) == 1:
-        default                                             = args[0].strip().lower()
-        question                                            = 'Answer y or n:'
-    else:
-        default                                             = None
-        question                                            = 'Answer y or n:'
-
-    if default == None:
-        prompt                                              = " [y/n] "
-    elif default == "y":
-        prompt                                              = " [Y/n] "
-    elif default == "n":
-        prompt                                              = " [y/N] "
-    else:
-        raise ValueError(
-            "{} invalid default parameter: \'{}\' - only [y, n] permitted".format(
-                __name__, default))
-
-    while 1:
-        sys.stdout.write(question + prompt)
-        choice                                              = (raw_input().lower().strip() or '')
-        if default is not None and choice == '':
-            if default == 'y':
-                return True
-            elif default == 'n':
-                return False
-        elif default is None:
-            if choice == '':
-                continue
-            elif choice[0] == 'y':
-                return True
-            elif choice[0] == 'n':
-                return False
-            else:
-                sys.stdout.write("Answer must be either y or n.\n")
-        elif choice[0] == 'y':
-            return True
-        elif choice[0] == 'n':
-            return False
-        else:
-            sys.stdout.write("Answer must be either y or n.\n")
 
 if __name__ == '__main__':
     get_args()
@@ -170,39 +120,6 @@ if __name__ == '__main__':
                 commands.append("commit")
                 commands.append("save")
 
-    if user_opts.update_config_boot and yesno(
-            'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
+    commands.append("end")
 
-        commands[:0]                                        = ["begin"]
-
-        vyatta_shell                                        = sp.Popen(
-            'bash',
-            shell=True,
-            stdin                                           = sp.PIPE,
-            stdout=sp.PIPE,
-            stderr                                          = sp.PIPE)
-        for cmd in commands:  # print to stdout
-            print cmd
-            vyatta_shell.stdin.write('{} {};\n'.format(vyatta_cmd, cmd))
-
-        out, err                                            = vyatta_shell.communicate()
-
-        cfg_error                                           = False
-        if out:
-            if re.search(r'^Error:.?', out):
-                cfg_error                                   = True
-            print "configure message:"
-            print out
-        if err:
-            cfg_error                                       = True
-            print "Error reported by configure:"
-            print err
-        if (vyatta_shell.returncode == 0) and not cfg_error:
-            print "DHCP configuration was successful."
-        else:
-            print "DHCP configuration was NOT successful!"
-
-    else:
-        for cmd in commands:
-            #print "echo %s" % cmd
-            print cmd
+    update_router(commands, do_update=user_opts.update_config_boot)

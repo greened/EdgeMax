@@ -547,4 +547,6 @@ if __name__ == '__main__':
         commands.append("commit")
         commands.append("save")
 
+    commands.append("end")
+
     update_router(commands, do_update=user_opts.update_config_boot)
