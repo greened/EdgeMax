@@ -20,7 +20,7 @@ isp = {
 # Interfaces: map name to interace, subnet and VLAN port.  -1 for no VLAN.
 networks = {
     'ext': { 'iface': 'eth0', 'subnet': '', 'vlan': '201', 'desc': 'External' },
-    'con': { 'iface': 'eth1', 'subnet': '10.0.10', 'vlan': '', 'desc': 'Console' },
+    'con': { 'iface': 'eth2', 'subnet': '10.0.10', 'vlan': '', 'desc': 'Console' },
     'int': { 'iface': 'eth3', 'subnet': '10.0.20', 'vlan': '2', 'desc': 'Internal' },
     'iot': { 'iface': 'eth3', 'subnet': '10.0.30', 'vlan': '3', 'desc': 'IOT' },
     'dmz': { 'iface': 'eth3', 'subnet': '10.0.40', 'vlan': '4', 'desc': 'DMZ' },
