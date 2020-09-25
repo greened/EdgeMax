@@ -11,7 +11,7 @@ def close_shell(vyatta_shell):
     print 'err: {}'.format(out)
 
     if out:
-        if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning|[Ff]ailed|without config session)', out) :
+        if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning|[Ff]ailed|without config session|[(]?the specified node does not exist[)](?<!Nothing to delete ))', out) :
             cfg_error = True
             print "configure message:"
             print out
