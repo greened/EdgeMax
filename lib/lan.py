@@ -11,7 +11,8 @@ isp = {
     'type': 'pppoe',
     'desc': 'ISP',
     'net': 'ext',
-    'iface': 'pppoe0',
+    'iface': 'eth0',
+    'pppoe': '0',
     'user': 'greenedavid799@centurylink.net',
     'password': 'tWsJ2P8H',
     'dns': [ '205.171.3.26', '205.171.2.26' ]
@@ -19,13 +20,13 @@ isp = {
 
 # Interfaces: map name to interace, subnet and VLAN port.  -1 for no VLAN.
 networks = {
-    'ext': { 'iface': 'eth0', 'subnet': '', 'vlan': '201', 'desc': 'External' },
-    'con': { 'iface': 'eth2', 'subnet': '10.0.10', 'vlan': '', 'desc': 'Console' },
-    'int': { 'iface': 'eth3', 'subnet': '10.0.20', 'vlan': '2', 'desc': 'Internal' },
-    'iot': { 'iface': 'eth3', 'subnet': '10.0.30', 'vlan': '3', 'desc': 'IOT' },
-    'dmz': { 'iface': 'eth3', 'subnet': '10.0.40', 'vlan': '4', 'desc': 'DMZ' },
-    'gst': { 'iface': 'eth3', 'subnet': '10.0.50', 'vlan': '5', 'desc': 'Guest' },
-    'adm': { 'iface': 'eth3', 'subnet': '10.0.90', 'vlan': '9', 'desc': 'Admin' }
+    'ext': { 'iface': 'eth0', 'subnet': '', 'vlan': '201', 'pppoe': '0', 'desc': 'External' },
+    'con': { 'iface': 'eth2', 'subnet': '10.0.10', 'vlan': '', 'pppoe': '', 'desc': 'Console' },
+    'int': { 'iface': 'eth3', 'subnet': '10.0.20', 'vlan': '2', 'pppoe': '', 'desc': 'Internal' },
+    'iot': { 'iface': 'eth3', 'subnet': '10.0.30', 'vlan': '3', 'pppoe': '', 'desc': 'IOT' },
+    'dmz': { 'iface': 'eth3', 'subnet': '10.0.40', 'vlan': '4', 'pppoe': '', 'desc': 'DMZ' },
+    'gst': { 'iface': 'eth3', 'subnet': '10.0.50', 'vlan': '5', 'pppoe': '', 'desc': 'Guest' },
+    'adm': { 'iface': 'eth3', 'subnet': '10.0.90', 'vlan': '9', 'pppoe': '', 'desc': 'Admin' }
 }
 
 machines = {

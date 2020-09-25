@@ -108,22 +108,16 @@ if __name__ == '__main__':
         subnet = info['subnet']
         router = subnet + router_dot
         vlan = info['vlan']
+        pppoe = info['pppoe']
 
+        address = '{}/24'.format(router) if subnet else 'dhcp'
         if vlan:
-            commands.append("set interfaces ethernet {} vif {} description {}".format(iface, vlan, desc))
-        else:
-            commands.append("set interfaces ethernet {} description {}".format(iface, desc))
+            iface = iface + ' vif ' + vlan
 
-        if subnet:
-            if vlan:
-                commands.append("set interfaces ethernet {} vif {} address {}/24".format(iface, vlan, router))
-            else:
-                commands.append("set interfaces ethernet {} address {}/24".format(iface, router))
-        else:
-            if vlan:
-                commands.append("set interfaces ethernet {} vif {} address dhcp".format(iface, vlan, router))
-            else:
-                commands.append("set interfaces ethernet {} address dhcp".format(iface, router))
+        commands.append("set interfaces ethernet {} description {}".format(iface, desc))
+        commands.append("set interfaces ethernet {} address {}".format(iface, address))
+        if pppoe:
+            commands.append("set interfaces ethernet {} pppoe {}".format(iface, pppoe))
 
         commands.append("commit")
         commands.append("save")
@@ -131,19 +125,19 @@ if __name__ == '__main__':
     if isp['type'] == 'pppoe':
         net = isp['net']
         iface = isp['iface']
-        src_iface = networks[net]['iface']
+        pppoe = isp['pppoe']
         user = isp['user']
         password = isp['password']
         desc = isp['desc']
         vlan = networks[net]['vlan']
 
         if vlan:
-            src_iface = src_iface + '.' + vlan
+            iface = iface + ' vif ' + vlan
 
-        commands.append("set interfaces pppoe {} source-interface {}".format(iface, src_iface))
-        commands.append("set interfaces pppoe {} authentication user {}".format(iface, user))
-        commands.append("set interfaces pppoe {} authentication password {}".format(iface, password))
-        commands.append("set interfaces pppoe {} description {}".format(iface, desc))
+        #commands.append("set interfaces pppoe {} source-interface {}".format(iface, src_iface))
+        commands.append("set interfaces ethernet {} pppoe {} user-id {}".format(iface, pppoe, user))
+        commands.append("set interfaces ethernet {} pppoe {} password {}".format(iface, pppoe, password))
+        commands.append("set interfaces ethernet {} pppoe {} description {}".format(iface, pppoe, desc))
 
         commands.append("commit")
         commands.append("save")
