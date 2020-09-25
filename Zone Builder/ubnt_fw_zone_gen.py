@@ -269,9 +269,9 @@ rules = (
 
 # Port forwarding
 port_fwds = (
-    ('https', 443, 'tcp', machines['bluebird']['addr']),
-    ('imaps', 993, 'tcp', machines['victor']['addr']),
-    ('smtps', 587, 'tcp', machines['victor']['addr'])
+    ('https', 443, 'tcp', machines['bluebird']['net'], machines['bluebird']['addr']),
+    ('imaps', 993, 'tcp', machines['victor']['net'], machines['victor']['addr']),
+    ('smtps', 587, 'tcp', machines['victor']['net'], machines['victor']['addr'])
 )
 
 
@@ -521,12 +521,25 @@ if __name__ == '__main__':
         name = port_fwd[0]
         port = port_fwd[1]
         protocol = port_fwd[2]
-        dest = port_fwd[3]
+        net = port_fwd[3]
+        addrdot = port_fwd[4]
+
+        if len(net) > 1:
+            raise Exception('Cannot port forward to multiple networks {} {} {} {} {}'.
+                            format(name, port, protocol, net, addrdot))
+
+        if net == 'ext':
+            raise Exception('Cannot port forward to external network {} {} {} {} {}'.
+                            format(name, port, protocol, net, addrdot))
+
+        net = net[0]
+
+        addr = networks[net]['subnet'] + addrdot
 
         commands.append("begin")
 
         commands.append("set port-forward rule {} description {}".format(id, name));
-        commands.append("set port-forward rule {} forward-to address {}".format(id, dest));
+        commands.append("set port-forward rule {} forward-to address {}".format(id, addr));
         commands.append("set port-forward rule {} forward-to port {}".format(id, port));
         commands.append("set port-forward rule {} original-port {}".format(id, port));
         commands.append("set port-forward rule {} protocol {}".format(id, protocol));
