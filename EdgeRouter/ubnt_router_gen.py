@@ -89,10 +89,12 @@ if __name__ == '__main__':
     commands.append("set system offload ipv4 gre enable")
     commands.append("set system offload ipv4 pppoe enable")
     commands.append("set system offload ipv4 vlan enable")
-    commands.append("set system offload ipv4 bonding enable")
+    # Doesn't exist.
+    #commands.append("set system offload ipv4 bonding enable")
 
     commands.append("set system offload ipv6 forwarding enable")
-    commands.append("set system offload ipv6 pppoe enable")
+    # This must be disabled for VLAN offloading.
+    commands.append("set system offload ipv6 pppoe disable")
     commands.append("set system offload ipv6 vlan enable")
 
     commands.append("set system offload ipsec enable")
