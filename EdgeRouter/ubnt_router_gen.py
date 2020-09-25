@@ -16,11 +16,10 @@ import os
 sys.path.append('../lib')
 
 from lan import networks, router_dot, user, router_password, isp
+from command import update_router
 
 global commands
 commands         = []
-vyatta_cmd       = "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper"
-# vyatta_cmd                                                = "echo" # Debug
 
 edge_os = {
     'wheezy': { 'url': 'http://archive.debian.org/debian' },
@@ -62,60 +61,16 @@ def get_args():
 
     user_opts        = parser.parse_args()
 
-
-def yesno(*args):
-
-    if len(args) > 1:
-        default                                             = args[0].strip().lower()
-        question                                            = args[1].strip()
-    elif len(args) == 1:
-        default                                             = args[0].strip().lower()
-        question                                            = 'Answer y or n:'
-    else:
-        default                                             = None
-        question                                            = 'Answer y or n:'
-
-    if default == None:
-        prompt                                              = " [y/n] "
-    elif default == "y":
-        prompt                                              = " [Y/n] "
-    elif default == "n":
-        prompt                                              = " [y/N] "
-    else:
-        raise ValueError(
-            "{} invalid default parameter: \'{}\' - only [y, n] permitted".format(
-                __name__, default))
-
-    while 1:
-        sys.stdout.write(question + prompt)
-        choice                                              = (raw_input().lower().strip() or '')
-        if default is not None and choice == '':
-            if default == 'y':
-                return True
-            elif default == 'n':
-                return False
-        elif default is None:
-            if choice == '':
-                continue
-            elif choice[0] == 'y':
-                return True
-            elif choice[0] == 'n':
-                return False
-            else:
-                sys.stdout.write("Answer must be either y or n.\n")
-        elif choice[0] == 'y':
-            return True
-        elif choice[0] == 'n':
-            return False
-        else:
-            sys.stdout.write("Answer must be either y or n.\n")
-
 if __name__ == '__main__':
     get_args()
 
-    commands.append("set system login user {} authentication plaintext-password {}".format(user, router_password))
+    commands.append("begin")
+    commands.append("set system login user {} authentication plaintext-password '{}'".format(user, router_password))
     commands.append("set system login user {} level admin".format(user))
-    commands.append("delete system login user ubnt")
+#    commands.append("delete system login user ubnt")
+
+    commands.append("commit")
+    commands.append("save")
 
     if os.path.exists('/etc/os-release'):
         with open('/etc/os-release', 'r') as fd:
@@ -127,6 +82,9 @@ if __name__ == '__main__':
                     commands.append("set system package repository {} components 'main contrib non-free'".format(release))
                     commands.append("set system package repository {} distribution {}".format(release, release))
                     commands.append("set system package repository {} url {}".format(release, url))
+
+    commands.append("commit")
+    commands.append("save")
 
     commands.append("set system offload ipv4 forwarding enable")
     commands.append("set system offload ipv4 gre enable")
@@ -140,7 +98,8 @@ if __name__ == '__main__':
 
     commands.append("set system offload ipsec enable")
 
-    commands.append("delete interfaces")
+    commands.append("commit")
+    commands.append("save")
 
     for net, info in networks.items():
         iface = info['iface']
@@ -165,6 +124,9 @@ if __name__ == '__main__':
             else:
                 commands.append("set interfaces ethernet {} address dhcp".format(iface, router))
 
+        commands.append("commit")
+        commands.append("save")
+
     if isp['type'] == 'pppoe':
         net = isp['net']
         iface = isp['iface']
@@ -181,45 +143,10 @@ if __name__ == '__main__':
         commands.append("set interfaces pppoe {} authentication user {}".format(iface, user))
         commands.append("set interfaces pppoe {} authentication password {}".format(iface, password))
         commands.append("set interfaces pppoe {} description {}".format(iface, desc))
+
+        commands.append("commit")
+        commands.append("save")
     else:
         raise Exception("Unknown isp type {}".format(isp['type']))
 
-    if user_opts.update_config_boot and yesno(
-            'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
-
-        commands[:0]                                        = ["begin"]
-        commands.append("commit")
-        commands.append("save")
-        commands.append("end")
-
-        vyatta_shell                                        = sp.Popen(
-            'bash',
-            shell=True,
-            stdin                                           = sp.PIPE,
-            stdout=sp.PIPE,
-            stderr                                          = sp.PIPE)
-        for cmd in commands:  # print to stdout
-            print cmd
-            vyatta_shell.stdin.write('{} {};\n'.format(vyatta_cmd, cmd))
-
-        out, err                                            = vyatta_shell.communicate()
-
-        cfg_error                                           = False
-        if out:
-            if re.search(r'^Error:.?', out):
-                cfg_error                                   = True
-            print "configure message:"
-            print out
-        if err:
-            cfg_error                                       = True
-            print "Error reported by configure:"
-            print err
-        if (vyatta_shell.returncode == 0) and not cfg_error:
-            print "Configuration was successful."
-        else:
-            print "Configuration was NOT successful!"
-
-    else:
-        for cmd in commands:
-            #print "echo %s" % cmd
-            print cmd
+    update_router(commands, do_update=user_opts.update_config_boot)

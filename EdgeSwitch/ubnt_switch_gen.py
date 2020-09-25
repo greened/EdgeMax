@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # Global config
     commands.append("configure")
     commands.append("network protocol dhcp")
-    commands.append("username {} password {} level 15".format(user, switch_password))
+    commands.append("username {} password '{}' level 15".format(user, switch_password))
     commands.append("vlan participation all include 1")
     commands.append("vlan participation all exclude 2-4093")
     commands.append("no vlan port pvid all")
@@ -167,9 +167,8 @@ if __name__ == '__main__':
     if user_opts.update_config_boot and yesno(
             'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
 
-        commands[:0]                                        = ["enable", "clear config", "clear pass"]
+        #commands[:0]                                        = ["clear config", "clear pass"]
         commands.append("write memory")
-        commands.append("exit")
         commands.append("exit")
 
         vyatta_shell                                        = sp.Popen(

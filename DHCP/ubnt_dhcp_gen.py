@@ -107,14 +107,19 @@ def yesno(*args):
 if __name__ == '__main__':
     get_args()
 
+    commands.append("begin")
+
     # Configure DHCP.
     commands.append("set service dhcp-server disabled false")
-    commands.append("set service dhcp-server use-dnsmasq enable")
+    commands.append("set service dhcp-server use-dnsmasq disable")
     commands.append("set service dns forwarding system")
 
     for dns in isp['dns']:
-        commands.append("set system name-server {}".format(dns))
+        commands.append("set system name-server 127.0.0.1")
         commands.append("set service dns forwarding name-server {}".format(dns))
+
+    commands.append("commit")
+    commands.append("save")
 
     for net, info in networks.items():
         iface = info['iface']
@@ -126,7 +131,7 @@ if __name__ == '__main__':
         start = subnet + '.64'
         stop = subnet + '.128'
 
-        viface = iface + '.' + vlan if vlan != '-1' else iface
+        viface = iface + '.' + vlan if vlan else iface
 
         if net != 'ext':
             commands.append("set service dns forwarding listen-on {}".format(viface))
@@ -134,14 +139,18 @@ if __name__ == '__main__':
             commands.append("set service dhcp-server shared-network-name {} subnet {} default-router {}".format(net, subnet_cidr, router))
             commands.append("set service dhcp-server shared-network-name {} subnet {} dns-server {}".format(net, subnet_cidr, router))
             commands.append("set service dhcp-server shared-network-name {} subnet {} lease 86400".format(net, subnet_cidr))
-            commands.append("set service dhcp-server shared-network-name {} start {} stop {}".format(net, start, stop))
+            commands.append("set service dhcp-server shared-network-name {} subnet {} start {} stop {}".format(net, subnet_cidr, start, stop))
             commands.append("set service dhcp-server shared-network-name {} subnet {} domain-name {}".format(net, subnet_cidr, domain))
-            commands.append("set service dhcp-server shared-network-name {} subnet {} domain-search {}".format(net, subnet_cidr, domain))
-            commands.append("set service dns forwarding options dhcp-range {},{},12h".format(start, stop))
+#            commands.append("set service dns forwarding options dhcp-range={},{},12h".format(start, stop))
+            commands.append("commit")
+            commands.append("save")
 
-    commands.append("set service dns forwarding options domain {}".format(domain))
+    commands.append("set service dns forwarding options domain={}".format(domain))
     commands.append("set system domain-name {}".format(domain))
     commands.append("set service dns forwarding options all-servers")
+
+    commands.append("commit")
+    commands.append("save")
 
     for name, info in machines.items():
         nets = info['net']
@@ -157,14 +166,14 @@ if __name__ == '__main__':
                 commands.append("set service dhcp-server shared-network-name {} subnet {} static-mapping {} mac-address {}".format(net, subnet_cidr, qual_name, mac))
                 commands.append("set system static-host-mapping host-name {}.{} inet {}".format(qual_name, domain, addr))
                 commands.append("set system static-host-mapping host-name {}.{} alias {}".format(qual_name, domain, qual_name))
+#                commands.append("set service dns forwarding options dhcp-host={},{}".format(mac, addr))
+                commands.append("commit")
+                commands.append("save")
 
     if user_opts.update_config_boot and yesno(
             'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
 
         commands[:0]                                        = ["begin"]
-        commands.append("commit")
-        commands.append("save")
-        commands.append("end")
 
         vyatta_shell                                        = sp.Popen(
             'bash',

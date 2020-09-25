@@ -15,6 +15,7 @@ import sys
 sys.path.append('../lib')
 
 from lan import domain, networks, machines, router_dot, isp
+from command import update_router
 
 # Define zones and which interfaces reside in each. The 'int' and
 # 'ext' zones are required
@@ -29,7 +30,7 @@ for net, info in networks.items():
 
     zones[net] = {}
     zones[net]['description'] = desc
-    zones[net]['interfaces'] = (iface + '.' + vlan)
+    zones[net]['interfaces'] = (iface + '.' + vlan if vlan else iface)
 
 # Define Groups which can be used in rules
 # Note that Comcast distributes ipv6 from 'fe80::/10' - so do not add this to the bogon list
@@ -355,53 +356,6 @@ def get_args():
     user_opts        = parser.parse_args()
 
 
-def yesno(*args):
-
-    if len(args) > 1:
-        default                                             = args[0].strip().lower()
-        question                                            = args[1].strip()
-    elif len(args) == 1:
-        default                                             = args[0].strip().lower()
-        question                                            = 'Answer y or n:'
-    else:
-        default                                             = None
-        question                                            = 'Answer y or n:'
-
-    if default == None:
-        prompt                                              = " [y/n] "
-    elif default == "y":
-        prompt                                              = " [Y/n] "
-    elif default == "n":
-        prompt                                              = " [y/N] "
-    else:
-        raise ValueError(
-            "{} invalid default parameter: \'{}\' - only [y, n] permitted".format(
-                __name__, default))
-
-    while 1:
-        sys.stdout.write(question + prompt)
-        choice                                              = (raw_input().lower().strip() or '')
-        if default is not None and choice == '':
-            if default == 'y':
-                return True
-            elif default == 'n':
-                return False
-        elif default is None:
-            if choice == '':
-                continue
-            elif choice[0] == 'y':
-                return True
-            elif choice[0] == 'n':
-                return False
-            else:
-                sys.stdout.write("Answer must be either y or n.\n")
-        elif choice[0] == 'y':
-            return True
-        elif choice[0] == 'n':
-            return False
-        else:
-            sys.stdout.write("Answer must be either y or n.\n")
-
 def build_rule(source_zones, dest_zones, params, ipversions = [4, 6], rulenum=None):
     '''
     Build a rule for each applicable zone direction and IP version
@@ -447,10 +401,15 @@ def build_rule(source_zones, dest_zones, params, ipversions = [4, 6], rulenum=No
 if __name__ == '__main__':
     get_args()
 
+    commands.append("begin")
+
     commands.append("delete firewall group")
     commands.append("delete firewall name")
     commands.append("delete firewall ipv6-name")
     commands.append("delete zone-policy")
+
+    commands.append("commit")
+    commands.append("save")
 
     for a in all_groups:
         for case in switch(a):
@@ -486,6 +445,9 @@ if __name__ == '__main__':
                 commands.append(
                     "set firewall group %s %s %s %s" % (gtype, b, gtarget, c))
 
+        commands.append("commit")
+        commands.append("save")
+
     # Build a ruleset for every direction (eg: 'int-ext', 'ext-dmz', 'ext-loc', etc.)
     rulesets                                                = list(itertools.permutations(all_zones, 2))
 
@@ -501,9 +463,15 @@ if __name__ == '__main__':
             commands.append("set firewall %sname %s%s-%s default-action drop" %
                             (prefix, prefix, src, dest))
 
+    commands.append("commit")
+    commands.append("save")
+
     # Add rules
     for rule in rules:
         build_rule(*rule)
+
+        commands.append("commit")
+        commands.append("save")
 
     # Create zones
     for zone in all_zones:
@@ -524,6 +492,9 @@ if __name__ == '__main__':
                 "set zone-policy zone %s default-action drop" % zone)
             commands.append("set zone-policy zone %s local-zone" % zone)
 
+        commands.append("commit")
+        commands.append("save")
+
         # Set rulesets
         for srczone in all_zones:
             if srczone == zone:
@@ -533,11 +504,18 @@ if __name__ == '__main__':
                     "set zone-policy zone %s from %s firewall %sname %s%s-%s" %
                     (zone, srczone, prefix, prefix, srczone, zone))
 
+        commands.append("commit")
+        commands.append("save")
+
     # Add port forwards
     commands.append("set port-forward auto-firewall enable");
     commands.append("set port-forward hairpin-nat enable");
     commands.append("set port-forward wan-interface %s" % networks['ext']['iface']);
-    commands.append("set port-forward lan-interface %s" % networks['dmz']['iface'] + '.'+ networks['dmz']['vlan']);
+    # FIXME: Change to forward to dmz when mail set up.
+    commands.append("set port-forward lan-interface %s" % networks['int']['iface'] + '.'+ networks['dmz']['vlan']);
+
+    commands.append("commit")
+    commands.append("save")
 
     for id, port_fwd in enumerate(port_fwds, 1):
         name = port_fwd[0]
@@ -545,57 +523,15 @@ if __name__ == '__main__':
         protocol = port_fwd[2]
         dest = port_fwd[3]
 
+        commands.append("begin")
+
         commands.append("set port-forward rule {} description {}".format(id, name));
         commands.append("set port-forward rule {} forward-to address {}".format(id, dest));
         commands.append("set port-forward rule {} forward-to port {}".format(id, port));
         commands.append("set port-forward rule {} original-port {}".format(id, port));
         commands.append("set port-forward rule {} protocol {}".format(id, protocol));
 
-    # Remove duplicates
-    seen = set()
-    result = []
-    for item in commands:
-        if item not in seen:
-            seen.add(item)
-            result.append(item)
-    commands = result
-
-    if user_opts.update_config_boot and yesno(
-            'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
-
-        commands[:0]                                        = ["begin"]
         commands.append("commit")
         commands.append("save")
-        commands.append("end")
 
-        vyatta_shell                                        = sp.Popen(
-            'bash',
-            shell=True,
-            stdin                                           = sp.PIPE,
-            stdout=sp.PIPE,
-            stderr                                          = sp.PIPE)
-        for cmd in commands:  # print to stdout
-            print cmd
-            vyatta_shell.stdin.write('{} {};\n'.format(vyatta_cmd, cmd))
-
-        out, err                                            = vyatta_shell.communicate()
-
-        cfg_error                                           = False
-        if out:
-            if re.search(r'^Error:.?', out):
-                cfg_error                                   = True
-            print "configure message:"
-            print out
-        if err:
-            cfg_error                                       = True
-            print "Error reported by configure:"
-            print err
-        if (vyatta_shell.returncode == 0) and not cfg_error:
-            print "Zone firewall configuration was successful."
-        else:
-            print "Zone firewall configuration was NOT successful!"
-
-    else:
-        for cmd in commands:
-            #print "echo %s" % cmd
-            print cmd
+    update_router(commands, do_update=user_opts.update_config_boot)
