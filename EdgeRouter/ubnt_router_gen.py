@@ -15,7 +15,7 @@ import os
 
 sys.path.append('../lib')
 
-from lan import networks, router_dot, user, router_password, isp
+from lan import networks, router_dot, user, router_password, isp, machine_addr, subnet_addr
 from command import update_router
 
 global commands
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         iface = info['iface']
         desc = info['desc']
         subnet = info['subnet']
-        router = subnet + router_dot
+        router = subnet_addr(net, router_dot)
         vlan = info['vlan']
         pppoe = info['pppoe']
 

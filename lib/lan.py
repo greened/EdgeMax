@@ -47,3 +47,22 @@ machines = {
     'davidphone': { 'net': ['int'], 'mac': '3c:28:6d:21:2d:3a', 'addr': '.52', 'port': '' },
     'emilyphone': { 'net': ['int'], 'mac': '40:4e:36:d4:81:5b', 'addr': '.53', 'port': '' }
 }
+
+def machine_addr(machine):
+    net = machines[machine]['net']
+
+    if len(net) > 1:
+        raise Exception('Machine {} does not have a unique address (nets {})'.format(machine, net))
+
+    net = net[0]
+
+    subnet = networks[net]['subnet']
+    addr = subnet + machines[machine]['addr'] if subnet else machines[machine]['addr']
+    return addr
+
+def subnet_addr(net, addr):
+    net = networks[net]
+    subnet = net['subnet']
+    if subnet:
+        addr = subnet + addr
+    return addr

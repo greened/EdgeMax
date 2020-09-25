@@ -14,7 +14,7 @@ import sys
 
 sys.path.append('../lib')
 
-from lan import domain, networks, machines, router_dot, isp
+from lan import domain, networks, machines, router_dot, isp, machine_addr, subnet_addr
 from command import update_router
 
 # Define zones and which interfaces reside in each. The 'int' and
@@ -109,7 +109,7 @@ fw_groups = {
         'iot': {
             'description': 'IOT Address Group',
             'addresses': (
-                        machines['ps5']['addr'],
+                         machine_addr('ps5'),
                         '255.255.255.255',)
         }
     },
@@ -520,19 +520,18 @@ if __name__ == '__main__':
         port = port_fwd[1]
         protocol = port_fwd[2]
         net = port_fwd[3]
-        addrdot = port_fwd[4]
+        addr = port_fwd[4]
 
         if len(net) > 1:
             raise Exception('Cannot port forward to multiple networks {} {} {} {} {}'.
-                            format(name, port, protocol, net, addrdot))
+                            format(name, port, protocol, net, addr))
 
         if net == 'ext':
             raise Exception('Cannot port forward to external network {} {} {} {} {}'.
-                            format(name, port, protocol, net, addrdot))
+                            format(name, port, protocol, net, addr))
 
         net = net[0]
-
-        addr = networks[net]['subnet'] + addrdot
+        addr = subnet_addr(net, addr)
 
         commands.append("begin")
 

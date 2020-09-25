@@ -14,7 +14,7 @@ import sys
 
 sys.path.append('../lib')
 
-from lan import domain, networks, machines, router_dot, isp
+from lan import domain, networks, machines, router_dot, isp, machine_addr, subnet_addr
 
 global commands
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         iface = info['iface']
         subnet = info['subnet']
         subnet_cidr = subnet + '.0/24'
-        router = subnet + router_dot
+        router = subnet_addr(net, router_dot)
         vlan = info['vlan']
 
         start = subnet + '.64'
@@ -103,11 +103,10 @@ if __name__ == '__main__':
     for name, info in machines.items():
         nets = info['net']
         mac = info['mac']
-
         if mac:
             for net in nets:
                 qual_name = name if len(nets) == 1 else name + '-' + net
-                addr = networks[net]['subnet'] + info['addr']
+                addr = subnet_addr(net, info['addr'])
                 subnet_cidr = networks[net]['subnet'] + '.0/24'
 
                 commands.append("set service dhcp-server shared-network-name {} subnet {} static-mapping {} ip-address {}".format(net, subnet_cidr, qual_name, addr))
