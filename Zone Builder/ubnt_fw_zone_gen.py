@@ -30,7 +30,7 @@ for net, info in networks.items():
 
     zones[net] = {}
     zones[net]['description'] = desc
-    zones[net]['interfaces'] = (iface + '.' + vlan if vlan else iface)
+    zones[net]['interfaces'] = [(iface + '.' + vlan if vlan else iface)]
 
 # Define Groups which can be used in rules
 # Note that Comcast distributes ipv6 from 'fe80::/10' - so do not add this to the bogon list
