@@ -8,7 +8,7 @@ def close_shell(vyatta_shell):
     cfg_error = False
 
     if out:
-        if re.search(r'^Error:.?', out) or re.search(r'not valid', out):
+        if re.search(r'^Error:.?', out) or re.search(r'(not valid|[Ee]rror|[Ww]arning)', out) :
             cfg_error = True
             print "configure message:"
             print out
