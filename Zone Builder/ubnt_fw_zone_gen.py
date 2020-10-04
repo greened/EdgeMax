@@ -94,7 +94,8 @@ fw_groups = {
                         'http',
                         'https',
                         'mdns',
-                        'netbios-ns',)
+                        'netbios-ns',
+                        '1900',)
         },
         'vpn': {
             'description': 'VPN Port Group',
@@ -234,7 +235,7 @@ rules = (
     (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
     # RULE 1500 ********************************************************************
     # Block MDNS and SSDP access to Internet
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port ssdp'), [4, 6], 1500),
+    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port 1900'), [4, 6], 1500),
     (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
     # RULE 2000-2100 **************************************************************
     # Permit access to SSDP
