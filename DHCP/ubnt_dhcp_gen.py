@@ -15,6 +15,7 @@ import sys
 sys.path.append('../lib')
 
 from lan import domain, networks, machines, router_dot, isp, machine_addr, subnet_addr
+from command import update_router
 
 global commands
 commands = []
