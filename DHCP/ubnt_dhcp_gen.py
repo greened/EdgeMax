@@ -68,9 +68,6 @@ if __name__ == '__main__':
         commands.append("set system name-server 127.0.0.1")
         commands.append("set service dns forwarding name-server {}".format(dns))
 
-    commands.append("commit")
-    commands.append("save")
-
     for net, info in networks.items():
         iface = info['iface']
         subnet = info['subnet']
