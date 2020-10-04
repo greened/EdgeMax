@@ -491,9 +491,6 @@ if __name__ == '__main__':
                 "set zone-policy zone %s default-action drop" % zone)
             commands.append("set zone-policy zone %s local-zone" % zone)
 
-        commands.append("commit")
-        commands.append("save")
-
         # Set rulesets
         for srczone in all_zones:
             if srczone == zone:
@@ -503,8 +500,8 @@ if __name__ == '__main__':
                     "set zone-policy zone %s from %s firewall %sname %s%s-%s" %
                     (zone, srczone, prefix, prefix, srczone, zone))
 
-        commands.append("commit")
-        commands.append("save")
+    commands.append("commit")
+    commands.append("save")
 
     # Add port forwards
     commands.append("set port-forward auto-firewall enable");
