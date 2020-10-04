@@ -17,6 +17,7 @@ sys.path.append('../lib')
 from lan import domain, networks, machines, router_dot, isp, machine_addr, subnet_addr
 
 global commands
+commands = []
 
 def get_args():
     # Enable default logging (rule 10000)
