@@ -204,17 +204,17 @@ all_groups = fw_groups.keys()
 rules = (
     # RULE 1 *****************************************************************
     # Allow connections
-    (('adm', 'loc'), all_zones, ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
+    (('con', 'adm', 'loc'), all_zones, ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
     (('int'), ('int'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('dmz', 'gst', 'int', 'iot'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('dmz', 'gst', 'int', 'ext', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
+    (('con', 'dmz', 'gst', 'int', 'iot'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
+    (('con', 'dmz', 'gst', 'int', 'ext', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
     # RULE 2 ***********************************************************************
     # Drop invalid packets
     (all_zones, all_zones, ('description "Drop invalid packets"', 'action drop', 'state invalid enable'), [4, 6]),
     # RULE 3 ***********************************************************************
     # Drop invalid WAN source IPs
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv4 bogons"', 'action drop', 'source group network-group ipv4Bogons'), [4]),
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv6 bogons"', 'action drop', 'source group ipv6-network-group ipv6Bogons'), [6]),
+    ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv4 bogons"', 'action drop', 'source group network-group ipv4Bogons'), [4]),
+    ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv6 bogons"', 'action drop', 'source group ipv6-network-group ipv6Bogons'), [6]),
     # RULE 300 *********************************************************************
     # Access 1 pixel HTTP server
     # (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Permit access to pixel server"', 'action accept', 'protocol tcp', 'destination address 192.168.168.1'), [4], 300),
@@ -228,15 +228,15 @@ rules = (
     ('ext', 'loc', ('description "Block IPv6-ICMP ping from the Internet"', 'action drop', 'icmpv6 type ping', 'protocol icmpv6'), [6], 500),
     ('ext', 'loc', ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
     ('ext', 'loc', ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'dmz', 'ext', 'gst', 'int', 'iot', 'mdx'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'iot', 'mdx'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
     # RULE 1000 ********************************************************************
     # Permit access to DNS
-    (('dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
+    (('con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
     # RULE 1500 ********************************************************************
     # Block MDNS and SSDP access to Internet
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port 1900'), [4, 6], 1500),
-    (('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port 1900'), [4, 6], 1500),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
     # RULE 2000-2100 **************************************************************
     # Permit access to SSDP
     (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp', 'destination group port-group ssdp'), [4, 6], 2000),
@@ -246,9 +246,9 @@ rules = (
     (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
     # RULES 3000-3100 **************************************************************
     # Drop brute force SSH from Internet
-    ('ext', ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
+    ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
     # Allow SSH
-    (('adm', 'int', 'loc', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+    (('adm', 'con', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     # RULES 5000-5600 **************************************************************
     # Allow vpn traffic ext/int
@@ -263,8 +263,8 @@ rules = (
     ('ext', 'loc', ('description "Allow DHCPV4 responses from ISP"', 'action accept', 'protocol udp', 'source port bootps', 'destination port bootpc'), [4], 7000),
     ('ext', 'loc', ('description "Allow DHCPV6 responses from ISP"', 'action accept', 'protocol udp', 'source address fe80::/64', 'source port dhcpv6-server', 'destination port dhcpv6-client'), [6], 7000),
     # Allow DHCP/DHCPV6 responses from DMZ, int, iot, adm and gst to local
-    (('adm', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
-    (('adm', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
+    (('adm', 'con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
     )
 # yapf: enable
 
@@ -500,8 +500,8 @@ if __name__ == '__main__':
                     "set zone-policy zone %s from %s firewall %sname %s%s-%s" %
                     (zone, srczone, prefix, prefix, srczone, zone))
 
-    commands.append("commit")
-    commands.append("save")
+#    commands.append("commit")
+#    commands.append("save")
 
     # Add port forwards
     commands.append("set port-forward auto-firewall enable");
@@ -510,8 +510,8 @@ if __name__ == '__main__':
     # FIXME: Change to forward to dmz when mail set up.
     commands.append("set port-forward lan-interface %s" % networks['int']['iface'] + '.'+ networks['dmz']['vlan']);
 
-    commands.append("commit")
-    commands.append("save")
+#    commands.append("commit")
+#    commands.append("save")
 
     for id, port_fwd in enumerate(port_fwds, 1):
         name = port_fwd[0]
@@ -531,7 +531,7 @@ if __name__ == '__main__':
         net = net[0]
         addr = subnet_addr(net, addr)
 
-        commands.append("begin")
+#        commands.append("begin")
 
         commands.append("set port-forward rule {} description {}".format(id, name));
         commands.append("set port-forward rule {} forward-to address {}".format(id, addr));
@@ -539,7 +539,7 @@ if __name__ == '__main__':
         commands.append("set port-forward rule {} original-port {}".format(id, port));
         commands.append("set port-forward rule {} protocol {}".format(id, protocol));
 
-        commands.append("commit")
-        commands.append("save")
+    commands.append("commit")
+    commands.append("save")
 
     update_router(commands, do_update=user_opts.update_config_boot)
