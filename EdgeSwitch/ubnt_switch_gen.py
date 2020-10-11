@@ -112,11 +112,13 @@ if __name__ == '__main__':
     commands.append("network protocol dhcp")
     commands.append("username {} password '{}' level 15".format(user, switch_password))
     commands.append("vlan participation all include 1")
-    commands.append("vlan participation all exclude 2-4093")
+#    for i in range(2, 4094):
+#        commands.append("vlan participation all exclude {}".format(i))
     commands.append("no vlan port pvid all")
     commands.append("no vlan port tagging all")
     commands.append("ip routing")
-    commands.append("ip route 0.0.0.0 0.0.0.0 {}".format(machines['router']['addr']))
+    router_addr = '192.168.0' + machines['router']['addr']
+    commands.append("ip route 0.0.0.0 0.0.0.0 {}".format(router_addr))
     commands.append("exit")
 
     # VLAN
