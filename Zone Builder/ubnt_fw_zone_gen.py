@@ -213,7 +213,7 @@ rules = (
     (('con', 'adm', 'loc'), all_zones, ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
     (('int'), ('int'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
     (('con', 'dmz', 'gst', 'int', 'iot'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
-    (('con', 'dmz', 'gst', 'int', 'ext', 'iot'), ('adm', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
+    (('ext', 'con', 'dmz', 'gst', 'int', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
     # RULE 2 ***********************************************************************
     # Drop invalid packets
     (all_zones, all_zones, ('description "Drop invalid packets"', 'action drop', 'state invalid enable'), [4, 6]),
@@ -234,7 +234,7 @@ rules = (
     ('ext', 'loc', ('description "Block IPv6-ICMP ping from the Internet"', 'action drop', 'icmpv6 type ping', 'protocol icmpv6'), [6], 500),
     ('ext', 'loc', ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
     ('ext', 'loc', ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
-    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'iot', 'mdx'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
+    (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
     (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
     # RULE 1000 ********************************************************************
     # Permit access to DNS
