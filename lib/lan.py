@@ -12,6 +12,7 @@ isp = {
     'desc': 'ISP',
     'net': 'ext',
     'iface': 'eth0',
+    'vlan': '201',
     'pppoe': '0',
     'user': 'greenedavid799@centurylink.net',
     'password': 'tWsJ2P8H',
