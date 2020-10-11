@@ -27,10 +27,16 @@ for net, info in networks.items():
     desc = info['desc'] + ' Zone'
     iface = info['iface']
     vlan = info['vlan']
+    pppoe = info['pppoe']
+
+    if vlan:
+        iface = iface + '.' + vlan
+    if pppoe:
+        iface = 'pppoe' + pppoe
 
     zones[net] = {}
     zones[net]['description'] = desc
-    zones[net]['interfaces'] = [(iface + '.' + vlan if vlan else iface)]
+    zones[net]['interfaces'] = [iface]
 
 # Define Groups which can be used in rules
 # Note that Comcast distributes ipv6 from 'fe80::/10' - so do not add this to the bogon list
@@ -538,6 +544,21 @@ if __name__ == '__main__':
         commands.append("set port-forward rule {} forward-to port {}".format(id, port));
         commands.append("set port-forward rule {} original-port {}".format(id, port));
         commands.append("set port-forward rule {} protocol {}".format(id, protocol));
+
+    commands.append("commit")
+    commands.append("save")
+
+    # Set up masquerading
+    isp_iface = isp['iface']
+    if isp['vlan']:
+        isp_iface = isp_iface + '.' + isp['vlan']
+    if isp['type'] == 'pppoe':
+        isp_iface = 'pppoe' + isp['pppoe']
+
+    commands.append("set service nat rule 5010 description 'masquerade for WAN'")
+    commands.append("set service nat rule 5010 outbound-interface {}".format(isp_iface))
+    commands.append("set service nat rule 5010 type masquerade")
+    commands.append("set service nat rule 5010 protocol all")
 
     commands.append("commit")
     commands.append("save")
