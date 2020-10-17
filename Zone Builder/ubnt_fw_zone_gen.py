@@ -255,7 +255,7 @@ rules = (
     ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
     # Allow SSH
     (('adm', 'con', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
-    ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+    # ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     # RULES 5000-5600 **************************************************************
     # Allow vpn traffic ext/int
     (('ext', 'int'), ('loc', 'dmz'), ('description "Allow vpn traffic"', 'action accept', 'protocol udp', 'destination group port-group vpn'), [4], 5000),
