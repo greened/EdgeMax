@@ -144,4 +144,9 @@ if __name__ == '__main__':
     else:
         raise Exception("Unknown isp type {}".format(isp['type']))
 
+    log_severity = 'debug'
+
+    commands.append("set system syslog host {} facility all level {}".
+                    format(machine_addr('victor'), log_severity))
+
     update_router(commands, do_update=user_opts.update_config_boot)
