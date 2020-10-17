@@ -278,7 +278,8 @@ rules = (
 port_fwds = (
     ('https', 443, 'tcp', machines['bluebird']['net'], machines['bluebird']['addr']),
     ('imaps', 993, 'tcp', machines['victor']['net'], machines['victor']['addr']),
-    ('smtps', 587, 'tcp', machines['victor']['net'], machines['victor']['addr'])
+    ('smtps', 587, 'tcp', machines['victor']['net'], machines['victor']['addr']),
+    ('smtp', 25, 'tcp', machines['victor']['net'], machines['victor']['addr'])
 )
 
 
@@ -509,12 +510,18 @@ if __name__ == '__main__':
 #    commands.append("commit")
 #    commands.append("save")
 
+    isp_iface = isp['iface']
+    if isp['vlan']:
+        isp_iface = isp_iface + '.' + isp['vlan']
+    if isp['type'] == 'pppoe':
+        isp_iface = 'pppoe' + isp['pppoe']
+
     # Add port forwards
     commands.append("set port-forward auto-firewall enable");
     commands.append("set port-forward hairpin-nat enable");
-    commands.append("set port-forward wan-interface %s" % networks['ext']['iface']);
+    commands.append("set port-forward wan-interface %s" % isp_iface);
     # FIXME: Change to forward to dmz when mail set up.
-    commands.append("set port-forward lan-interface %s" % networks['int']['iface'] + '.'+ networks['dmz']['vlan']);
+    commands.append("set port-forward lan-interface %s" % networks['int']['iface'] + '.'+ networks['int']['vlan']);
 
 #    commands.append("commit")
 #    commands.append("save")
@@ -549,12 +556,6 @@ if __name__ == '__main__':
     commands.append("save")
 
     # Set up masquerading
-    isp_iface = isp['iface']
-    if isp['vlan']:
-        isp_iface = isp_iface + '.' + isp['vlan']
-    if isp['type'] == 'pppoe':
-        isp_iface = 'pppoe' + isp['pppoe']
-
     commands.append("set service nat rule 5010 description 'masquerade for WAN'")
     commands.append("set service nat rule 5010 outbound-interface {}".format(isp_iface))
     commands.append("set service nat rule 5010 type masquerade")
