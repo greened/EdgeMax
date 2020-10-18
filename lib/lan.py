@@ -40,13 +40,13 @@ machines = {
     'tv': { 'net': ['int'], 'mac': '', 'addr': '.5', 'port': '5' },
     'avr': { 'net': ['int'], 'mac': '', 'addr': '.6', 'port': '6' },
     'ps5': { 'net': ['iot'], 'mac': '', 'addr': '.7', 'port': '7' },
-    'printer': { 'net': ['iot'], 'mac': '', 'addr': '.8', 'port': '8' },
+    'printer': { 'net': ['iot'], 'mac': '9c:ad:97:b4:63:45', 'addr': '.8', 'port': '8' },
     'bluebird': { 'net': ['int'], 'mac': '02:11:32:25:25:03', 'addr': '.23', 'port': '23' },
     'victor': { 'net': ['int'], 'mac': '00:11:32:7f:7d:10', 'addr': '.24', 'port': '24' },
     'davidmac': { 'net': ['int'], 'mac': '38:f9:d3:51:d4:00', 'addr': '.50', 'port': '' },
     'emilymac': { 'net': ['int'], 'mac': 'dc:a9:04:88:e6:43', 'addr': '.51', 'port': '' },
     'davidphone': { 'net': ['int'], 'mac': '3c:28:6d:21:2d:3a', 'addr': '.52', 'port': '' },
-    'emilyphone': { 'net': ['int'], 'mac': '40:4e:36:d4:81:5b', 'addr': '.53', 'port': '' }
+    'emilyphone': { 'net': ['int'], 'mac': '60:b7:6e:36:97:fc', 'addr': '.53', 'port': '' }
 }
 
 def machine_addr(machine):
