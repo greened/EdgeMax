@@ -462,6 +462,13 @@ if __name__ == '__main__':
         commands.append("commit")
         commands.append("save")
 
+    # Set MSS clamping to handle broken web sites.
+    commands.append("set firewall options mss-clamp interface-type all")
+    commands.append("set firewall options mss-clamp mss 1412")
+
+    commands.append("commit")
+    commands.append("save")
+
     # Build a ruleset for every direction (eg: 'int-ext', 'ext-dmz', 'ext-loc', etc.)
     rulesets                                                = list(itertools.permutations(all_zones, 2))
 
