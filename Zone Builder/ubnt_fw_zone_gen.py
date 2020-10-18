@@ -50,6 +50,12 @@ fw_groups = {
                         'smtp',
                         'ssmtp',)
         },
+        'web': {
+            'description': 'Web Port Group',
+            'ports': (
+                'https',
+            )
+        },
         'ftp': {
             'description': 'FTP Port Group',
             'ports': (
@@ -250,11 +256,13 @@ rules = (
     # Permit access to Print
     (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp', 'destination group port-group print'), [4, 6], 2100),
     (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
-    # RULES 3000-3100 **************************************************************
+    # RULES 3000-3200 **************************************************************
     # Drop brute force SSH from Internet
     ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
     # Allow SSH
     (('adm', 'con', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+    # Allow web management
+    # (('int'), ('adm', 'loc'), ('description "Permit web management access"', 'action accept', 'protocol tcp', 'destination group port-group web'), [4, 6], 3200),
     # ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     # RULES 5000-5600 **************************************************************
     # Allow vpn traffic ext/int
