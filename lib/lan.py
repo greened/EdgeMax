@@ -46,7 +46,11 @@ machines = {
     'davidmac': { 'net': ['int'], 'mac': '38:f9:d3:51:d4:00', 'addr': '.50', 'port': '' },
     'emilymac': { 'net': ['int'], 'mac': 'dc:a9:04:88:e6:43', 'addr': '.51', 'port': '' },
     'davidphone': { 'net': ['int'], 'mac': '3c:28:6d:21:2d:3a', 'addr': '.52', 'port': '' },
-    'emilyphone': { 'net': ['int'], 'mac': '60:b7:6e:36:97:fc', 'addr': '.53', 'port': '' }
+    'emilyphone': { 'net': ['int'], 'mac': '60:b7:6e:36:97:fc', 'addr': '.53', 'port': '' },
+    'sonosonekitchen': {'net': ['iot'], 'mac': '48:a6:b8:f2:cf:2e', 'addr': '.54', 'port': ''},
+    'washer': {'net': ['iot'], 'mac': '40:2f:86:b1:15:cd', 'addr': '.55', 'port': ''},
+    'dryer': {'net': ['iot'], 'mac': '40:2f:86:7d:c3:ad', 'addr': '.56', 'port': ''},
+    'chromecast': {'net': ['iot'], 'mac': '', 'addr': '.57', 'port': ''},
 }
 
 def machine_addr(machine):

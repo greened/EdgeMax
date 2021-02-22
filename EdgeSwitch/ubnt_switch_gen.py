@@ -166,6 +166,20 @@ if __name__ == '__main__':
                 commands.append("routing")
                 commands.append("exit")
 
+    # Set up IGMP snooping for IOT (Sonos, etc.).
+    commands.append("vlan database")
+    commands.append("set igmp {}".format(networks['int']['vlan']))
+    commands.append("set igmp mroutrer{}".format(networks['int']['vlan']))
+    commands.append("set igmp report-suppression {}".format(networks['int']['vlan']))
+    commands.append("set igmp {}".format(networks['iot']['vlan']))
+    commands.append("set igmp mroutrer{}".format(networks['iot']['vlan']))
+    commands.append("set igmp report-suppression {}".format(networks['iot']['vlan']))
+    commands.append("exit")
+    commands.append("interface 0/{}".format(machines['router']['port']))
+    commands.append("set igmp mrouter interface")
+    commands.append("exit")
+
+
     if user_opts.update_config_boot and yesno(
             'y', 'OK to update your configuration?'):  # Open a pipe to bash and iterate commands
 

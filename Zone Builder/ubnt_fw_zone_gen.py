@@ -42,6 +42,33 @@ for net, info in networks.items():
 # Note that Comcast distributes ipv6 from 'fe80::/10' - so do not add this to the bogon list
 fw_groups = {
     'port_group': {
+        'chromecast-tcp-source': {
+            'description': "Chromecast TCP Source Port Group",
+            'ports': (
+                '8008',
+                '8009',
+                '8443',
+            )
+        },
+        'chromecast-udp-source': {
+            'description': "Chromecast UDP Source Port Group",
+            'ports': (
+                '32768-61000',
+            )
+        },
+        'chromecast-destination': {
+            'description': "Chromecast Destination Port Group",
+            'ports': (
+                '32768-61000',
+            )
+        },
+        'dlna': {
+            'description': 'DLNA Port Group',
+            'ports': (
+                        '50001',
+                        '50002',
+            )
+        },
         'email': {
             'description': 'Email Port Group',
             'ports': (
@@ -109,6 +136,46 @@ fw_groups = {
                         'netbios-ns',
                         '1900',)
         },
+        'sonos-tcp': {
+            'description': "Sonos TCP Port Group",
+            'ports': (
+                '445',
+                '1400',
+                '1443',
+                '3400',
+                '3401',
+                '3405',
+                '3445',
+                '3500',
+                '3501',
+                '4070',
+                '4444',
+            )
+        },
+        'sonos-udp': {
+            'description': "Sonos UDP Port Group",
+            'ports': (
+                '136',
+                '137',
+                '138',
+                '139',
+                '1900',
+                '1901',
+                '1902',
+                '2869',
+                '5353',
+                '6969',
+                '10243',
+                '10280',
+                '10281',
+                '10282',
+                '10283',
+                '10284',
+                '43674',
+                '43761',
+                '43418',
+            )
+        },
         'vpn': {
             'description': 'VPN Port Group',
             'ports': (
@@ -122,9 +189,41 @@ fw_groups = {
         'iot': {
             'description': 'IOT Address Group',
             'addresses': (
+                         machine_addr('tv'),
+                         machine_addr('avr'),
                          machine_addr('ps5'),
-                        '255.255.255.255',)
-        }
+                         machine_addr('printer'),
+                         machine_addr('sonosonekitchen'),
+                         machine_addr('washer'),
+                         machine_addr('dryer'),
+                        '255.255.255.255',
+            )
+        },
+        'sonos': {
+            'description': 'Sonos Address Group',
+            'addresses': (
+                         machine_addr('sonosonekitchen'),
+            )
+        },
+        'chromecast': {
+            'description': 'Chromecast Address Group',
+            'addresses': (
+                machine_addr('chromecast'),
+            )
+        },
+        'dlna-client': {
+            'description': 'DLNA Client Address Group',
+            'addresses': (
+                machine_addr('sonosonekitchen'),
+                machine_addr('chromecast'),
+            )
+        },
+        'dlna-server': {
+            'description': 'DLNA Server Address Group',
+            'addresses': (
+                machine_addr('victor'),
+            )
+        },
     },
     'ipv4_group': {
         'ipv4Bogons': {
@@ -220,20 +319,25 @@ rules = (
     (('int'), ('int'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
     (('con', 'dmz', 'gst', 'int', 'iot'), ('ext'), ('description "Allow all connections"', 'action accept', 'state new enable', 'state established enable', 'state related enable'), [4, 6]),
     (('ext', 'con', 'dmz', 'gst', 'int', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow established connections"', 'action accept', 'state established enable', 'state related enable'), [4, 6]),
+
     # RULE 2 ***********************************************************************
     # Drop invalid packets
     (all_zones, all_zones, ('description "Drop invalid packets"', 'action drop', 'state invalid enable'), [4, 6]),
+
     # RULE 3 ***********************************************************************
     # Drop invalid WAN source IPs
     ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv4 bogons"', 'action drop', 'source group network-group ipv4Bogons'), [4]),
     ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop IPv6 bogons"', 'action drop', 'source group ipv6-network-group ipv6Bogons'), [6]),
+
     # RULE 300 *********************************************************************
     # Access 1 pixel HTTP server
     # (('dmz', 'gst', 'int', 'mdx'), 'loc', ('description "Permit access to pixel server"', 'action accept', 'protocol tcp', 'destination address 192.168.168.1'), [4], 300),
+
     # RULE 400 *********************************************************************
     # Allow media address group access
 #     (('dmz', 'gst'), ('int', 'mdx'), ('description "Allow media address group access"', 'action accept', 'destination group address-group media'), [4], 400),
 #    (('int', 'mdx'), ('adm', 'dmz', 'gst', 'loc'), ('description "Allow mdx to offer access to media address group"', 'action accept', 'source group address-group media'), [4], 400),
+
     # RULE 500 *********************************************************************
     # Allow ICMP/IPV6-ICMP
     ('ext', 'loc', ('description "Block ICMP ping from the Internet"', 'action drop', 'icmp type-name ping', 'protocol icmp'), [4], 500),
@@ -242,36 +346,60 @@ rules = (
     ('ext', 'loc', ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
     (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow ICMP"', 'action accept', 'protocol icmp'), [4], 510),
     (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'ext', 'gst', 'int', 'loc', 'iot'), ('description "Allow IPv6-ICMP"', 'action accept', 'protocol icmpv6'), [6], 510),
+
     # RULE 1000 ********************************************************************
     # Permit access to DNS
     (('con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Permit access to local DNS"', 'action accept', 'protocol tcp_udp', 'destination port domain'), [4, 6], 1000),
+
     # RULE 1500 ********************************************************************
     # Block MDNS and SSDP access to Internet
     (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port 1900'), [4, 6], 1500),
     (('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), 'ext', ('description "Block MDNS & SSDP access to Internet"', 'action drop', 'protocol udp', 'destination port mdns'), [4, 6], 1500),
-    # RULE 2000-2100 **************************************************************
+
+    # RULE 2000-2900 **************************************************************
     # Permit access to SSDP
     (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp', 'destination group port-group ssdp'), [4, 6], 2000),
     (('dmz', 'gst'), ('int', 'iot'), ('description "Permit MDNS & SSDP access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2000),
     # Permit access to Print
     (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp', 'destination group port-group print'), [4, 6], 2100),
     (('int', 'dmz', 'gst'), 'iot', ('description "Permit Printer access"', 'action accept', 'protocol tcp_udp','destination group address-group iot'), [4], 2100),
+    # Permit access to IGMP
+    ('iot', 'int', ('description "Permit IGMP IoT access"', 'action accept', 'protocol igmp','source group address-group iot'), [4], 2200),
+    # Permit Chrommecast access
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol tcp','source group address-group chromecast'), [4], 2300),
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol tcp','destination group port-group chromecast-tcp-source'), [4], 2300),
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol udp','source group address-group chromecast'), [4], 2400),
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol udp','destination group port-group chromecast-udp-source'), [4], 2400),
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol udp','source group address-group chromecast'), [4], 2500),
+    ('iot', 'int', ('description "Permit Chromecast access"', 'action accept', 'protocol udp','destination group port-group chromecast-destination'), [4], 2500),
+    # Permit Sonos access
+    ('iot', 'int', ('description "Permit Sonos access"', 'action accept', 'protocol tcp','source group address-group sonos'), [4], 2600),
+    ('iot', 'int', ('description "Permit Sonos access"', 'action accept', 'protocol tcp','destination group port-group sonos-tcp'), [4], 2600),
+    ('iot', 'int', ('description "Permit Sonos access"', 'action accept', 'protocol udp','source group address-group sonos'), [4], 2700),
+    ('iot', 'int', ('description "Permit Sonos access"', 'action accept', 'protocol udp','destination group port-group sonos-udp'), [4], 2700),
+    # Permit DLNA
+    ('iot', 'int', ('description "Permit DLNA"', 'action accept', 'protocol udp','destination group address-group dlna-server'), [4], 2800),
+    ('iot', 'int', ('description "Permit DLNA"', 'action accept', 'protocol udp','source group port-group dlna'), [4], 2800),
+
     # RULES 3000-3200 **************************************************************
     # Drop brute force SSH from Internet
     ('ext', ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Drop brute force SSH from Internet"', 'action drop', 'protocol tcp', 'destination port ssh', 'recent count 3', 'recent time 30'), [4], 3000),
     # Allow SSH
-    (('adm', 'con', 'int', 'loc', 'iot'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+    (('adm', 'con', 'int', 'loc'), ('adm', 'con', 'dmz', 'gst', 'int', 'loc', 'iot'), ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
     # Allow web management
-    # (('int'), ('adm', 'loc'), ('description "Permit web management access"', 'action accept', 'protocol tcp', 'destination group port-group web'), [4, 6], 3200),
+    (('int'), ('adm', 'loc'), ('description "Permit web management access"', 'action accept', 'protocol tcp', 'destination group port-group web'), [4, 6], 3200),
     # ('ext', 'loc', ('description "Allow SSH"', 'action accept', 'protocol tcp', 'destination port ssh'), [4], 3100),
+
     # RULES 5000-5600 **************************************************************
     # Allow vpn traffic ext/int
     (('ext', 'int'), ('loc', 'dmz'), ('description "Allow vpn traffic"', 'action accept', 'protocol udp', 'destination group port-group vpn'), [4], 5000),
     (('ext', 'int'), ('loc', 'dmz'), ('description "Allow vpn PPTP"', 'action accept', 'protocol tcp', 'destination port 1723'), [4], 5500),
     (('ext', 'int'), ('loc', 'dmz'), ('description "Allow vpn ESP"', 'action accept', 'protocol esp'), [4], 5600),
+
     # RULE 6000 ********************************************************************
     # Allow ADT Camera streams
     # ('int', 'dmz', ('description "Allow ADT Camera streams"', 'action accept', 'protocol tcp_udp', 'destination port 4301-4325', 'log enable'), [4], 6000),
+
     # RULE 7000 ********************************************************************
     # Allow DHCP/DHCPV6 responses from ISP
     ('ext', 'loc', ('description "Allow DHCPV4 responses from ISP"', 'action accept', 'protocol udp', 'source port bootps', 'destination port bootpc'), [4], 7000),
@@ -279,7 +407,7 @@ rules = (
     # Allow DHCP/DHCPV6 responses from DMZ, int, iot, adm and gst to local
     (('adm', 'con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV4 responses"', 'action accept', 'protocol udp', 'source port bootpc', 'destination port bootps'), [4], 7000),
     (('adm', 'con', 'dmz', 'gst', 'int', 'iot'), 'loc', ('description "Allow DHCPV6 responses"', 'action accept', 'protocol udp', 'source port dhcpv6-client', 'destination port dhcpv6-server'), [6], 7000)
-    )
+)
 # yapf: enable
 
 # Port forwarding

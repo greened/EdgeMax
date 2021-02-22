@@ -122,6 +122,21 @@ if __name__ == '__main__':
         commands.append("commit")
         commands.append("save")
 
+    # Set up igmp proxy for IoT.
+    int_vif = "{}.{}".format(networks['int']['iface'], networks['int']['vlan'])
+    iot_vif = "{}.{}".format(networks['iot']['iface'], networks['iot']['vlan'])
+
+    commands.append("set protocols igmp-proxy interface {} role upstream".format(int_vif))
+    commands.append("set protocols igmp-proxy interface {} threshold 1".format(int_vif))
+    commands.append("set protocols igmp-proxy interface {} alt-subnet 0.0.0.0/0".format(int_vif))
+    commands.append("set protocols igmp-proxy interface {} role downstream".format(iot_vif))
+    commands.append("set protocols igmp-proxy interface {} threshold 1".format(iot_vif))
+    commands.append("set protocols igmp-proxy interface {} alt-subnet 0.0.0.0/0".format(iot_vif))
+
+    # Set up mDNS repeater for IoT.
+    commands.append('set service mdns repeater interface {}'.format(int_vif))
+    commands.append('set service mdns repeater interface {}'.format(iot_vif))
+
     if isp['type'] == 'pppoe':
         net = isp['net']
         iface = isp['iface']
