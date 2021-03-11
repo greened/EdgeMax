@@ -51,6 +51,7 @@ machines = {
     'washer': {'net': ['iot'], 'mac': '40:2f:86:b1:15:cd', 'addr': '.55', 'port': ''},
     'dryer': {'net': ['iot'], 'mac': '40:2f:86:7d:c3:ad', 'addr': '.56', 'port': ''},
     'chromecast': {'net': ['iot'], 'mac': '', 'addr': '.57', 'port': ''},
+    'davidwork': { 'net': ['int'], 'mac': 'a0:78:17:86:a4:ad', 'addr': '.58', 'port': '' },
 }
 
 def machine_addr(machine):
